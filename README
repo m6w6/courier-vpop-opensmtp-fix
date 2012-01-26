@@ -1,0 +1,33 @@
+opensmtprelay
+=============
+
+A few years ago, it was possible to have courier-imap update the open-smtp
+relay file with it's authvchkpw module. This feature and thus imap-before-smtp
+disappeared with the introduction of courier-authdaemond because the vchkpw
+code of authdaemond does not have a chance to see the TCPREMOTEIP environment
+variable.
+
+This little setuid wrapper re-enables imap-before-smtp, calling vpopmails
+open_smtp_relay(). It has to replace the imapd command in your courier-imap
+startup script and will exec imapd, after opening the smtp relay, wile
+imap-login is still in place to authenticate via authdaemond's vchkpw module.
+
+
+clearsmtprelay
+==============
+
+Might be useful to you, if you noticed that the tcp.smtp.cdb does not always 
+contain the IPs of the open-smtp file:
+
+$ for ip in $(sed -re 's/:.*//' < open-smtp); do \
+    cdbget $ip < tcp.smtp.cdb > /dev/null \
+        || echo "$ip is missing"; \
+    done
+
+The vpopmail FAQ claims that clearopensmtp is requesting locks on the 
+open-smtp(.lock) file, but the source does not read like it would.
+
+http://sourceforge.net/tracker/?func=detail&aid=3205655&group_id=85937&atid=577798
+
+Run this program regularly instead of clearopensmtp.
+
